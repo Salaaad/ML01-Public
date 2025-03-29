@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Récupère tout l'historique des commits
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,19 +30,19 @@ jobs:
       - name: Check for changes in training_data.csv
         id: check_changes
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'training_data.csv'; then
+          if git diff --name-only HEAD^ HEAD | grep -q 'training_data.csv'; then
             echo "CHANGED=true" >> $GITHUB_ENV
           else
             echo "CHANGED=false" >> $GITHUB_ENV
           fi
 
       - name: Train Linear Model
-        if: steps.check_changes.outputs.changed == 'true'
+        if: env.CHANGED == 'true'
         run: |
           python train_model.py
 
       - name: Commit and Push Linear Model to Release Branch
-        if: steps.check_changes.outputs.changed == 'true'
+        if: env.CHANGED == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -51,7 +53,7 @@ jobs:
           git push origin release
 
       - name: Create GitHub Release
-        if: steps.check_changes.outputs.changed == 'true'
+        if: env.CHANGED == 'true'
         uses: actions/create-release@v1
         with:
           tag_name: v${{ github.run_number }}
