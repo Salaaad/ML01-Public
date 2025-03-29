@@ -42,15 +42,16 @@ jobs:
           python train_model.py
 
       - name: Commit and Push Linear Model to Release Branch
-        if: env.CHANGED == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git checkout release
-          git merge main
-          git add linear_model.txt
-          git commit -m "Update linear model"
-          git push origin release
+  if: env.CHANGED == 'true'
+  run: |
+    git config --local user.email "action@github.com"
+    git config --local user.name "GitHub Action"
+    git checkout release
+    git merge main --ff-only || git merge main --no-edit
+    git add linear_model.txt
+    git commit -m "Update linear model" || echo "No changes to commit"
+    git push origin release || git push origin release --force
+
 
       - name: Create GitHub Release
         if: env.CHANGED == 'true'
