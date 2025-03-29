@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Donne les permissions d'écriture aux actions
 
     steps:
       - name: Checkout repository
