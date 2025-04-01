@@ -48,8 +48,20 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Stash changes to avoid conflicts when switching branches
+          git stash -u  # Stashes both tracked and untracked files (like linear_model.txt)
+          
+          # Switch to the release branch
           git checkout release
+          
+          # Merge latest changes from main into release
           git merge main --ff-only || git merge main --no-edit
+          
+          # Reapply the stashed changes onto the release branch
+          git stash pop  # Applies the stashed model file
+          
+          # Add, commit, and push the linear_model.txt
           git add linear_model.txt
           git commit -m "Update linear model" || echo "No changes to commit"
           git push origin release || git push origin release --force
