@@ -12,13 +12,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Donne les permissions d'écriture aux actions
+      contents: write  # Permissions to push changes and create releases
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Récupère tout l'historique des commits
+          fetch-depth: 0  # Fetch full commit history
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -46,16 +46,16 @@ jobs:
       - name: Commit and Push Linear Model to Release Branch
         if: env.CHANGED == 'true'
         run: |
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git checkout release
-            git merge main --ff-only || git merge main --no-edit
-            git add linear_model.txt
-            git commit -m "Update linear model" || echo "No changes to commit"
-            git push origin release || git push origin release --force
-
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout release
+          git merge main --ff-only || git merge main --no-edit
+          git add linear_model.txt
+          git commit -m "Update linear model" || echo "No changes to commit"
+          git push origin release || git push origin release --force
 
       - name: Create GitHub Release
+        id: create_release  # Added ID to reference outputs
         if: env.CHANGED == 'true'
         uses: actions/create-release@v1
         env:
@@ -67,3 +67,13 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Upload Linear Model to Release
+        if: env.CHANGED == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  # From create-release step
+          asset_path: ./linear_model.txt  # Path to the model file
+          asset_name: linear_model.txt  # Name in the release
+          asset_content_type: text/plain
